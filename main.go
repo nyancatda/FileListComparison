@@ -1,7 +1,7 @@
 /*
  * @Author: NyanCatda
  * @Date: 2023-01-12 02:18:52
- * @LastEditTime: 2023-01-12 03:26:23
+ * @LastEditTime: 2023-03-12 17:24:01
  * @LastEditors: NyanCatda
  * @Description: main file
  * @FilePath: \FileListComparison\main.go
@@ -11,6 +11,7 @@ package main
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/nyancatda/FileListComparison/internal/ArrayComparison"
 	"github.com/nyancatda/FileListComparison/internal/File"
@@ -29,7 +30,7 @@ func main() {
 	SrcFiles := make([]string, len(SrcFileList))
 	// 提取源文件夹文件列表中的文件名
 	for Index, Value := range SrcFileList {
-		SrcFiles[Index] = filepath.Base(Value)
+		SrcFiles[Index] = filepath.Clean(strings.Replace(Value, Flag.Flags.SrcPath, "", -1))
 	}
 
 	// 读取目标文件夹文件列表
@@ -40,7 +41,7 @@ func main() {
 	DestFiles := make([]string, len(DestFileList))
 	// 提取目标文件夹文件列表中的文件名
 	for Index, Value := range DestFileList {
-		DestFiles[Index] = filepath.Base(Value)
+		DestFiles[Index] = filepath.Clean(strings.Replace(Value, Flag.Flags.DestPath, "", -1))
 	}
 
 	// 对比文件列表差异
@@ -66,7 +67,13 @@ func main() {
 			fmt.Println("正在复制新增的文件")
 			File.MKDir("./New")
 			for _, Value := range New {
-				_, err := File.Copy(Flag.Flags.DestPath+"/"+Value, "./New/"+filepath.Base(Value))
+				// 创建文件夹
+				_, err := File.MKDir("./New/" + filepath.Dir(Value))
+				if err != nil {
+					panic(err)
+				}
+				// 复制文件
+				_, err = File.Copy(Flag.Flags.DestPath+"/"+Value, "./New/"+Value)
 				if err != nil {
 					panic(err)
 				}
@@ -77,7 +84,13 @@ func main() {
 			fmt.Println("正在复制缺失的文件")
 			File.MKDir("./Missing")
 			for _, Value := range Missing {
-				_, err := File.Copy(Flag.Flags.SrcPath+"/"+Value, "./Missing/"+filepath.Base(Value))
+				// 创建文件夹
+				_, err := File.MKDir("./Missing/" + filepath.Dir(Value))
+				if err != nil {
+					panic(err)
+				}
+				// 复制文件
+				_, err = File.Copy(Flag.Flags.SrcPath+"/"+Value, "./Missing/"+Value)
 				if err != nil {
 					panic(err)
 				}
